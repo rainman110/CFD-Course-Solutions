@@ -236,7 +236,104 @@ Field2D<T> read_field2d(const std::string& filename)
     return result;
 }
 
-using DMatrix = Field2D<double>;
-using DVector = Field1D<double>;
+using real = double;
+using DMatrix = Field2D<real>;
+using DVector = Field1D<real>;
+
+namespace matrix
+{
+
+    /// Returns the identity matrix
+    inline DMatrix eye(size_t n)
+    {
+        DMatrix result(n, n, 0.);
+        for (size_t i = 0; i < n; ++i) {
+            result(i,i) = 1.;
+        }
+
+        return result;
+    }
+    
+    /// Block-view of a matrix
+    class Block {
+    public:
+        Block(DMatrix& mat, size_t imin, size_t jmin, size_t m, size_t n)
+            : m_mat(mat), m_imin(imin), m_jmin(jmin), m_m(m), m_n(n)
+        {
+            if (imin < 0 || imin >= mat.m() || m < 0 || imin + m > mat.m() ) {
+                throw std::runtime_error("Illegal row indices of BlockMatrix");
+            }
+            if (jmin < 0 || jmin >= mat.n() || n < 0 || jmin + n > mat.n() ) {
+                throw std::runtime_error("Illegal row indices of BlockMatrix");
+            }
+        }
+        
+        /// Read only access to the (i,j)-th value of the field
+        /// Usage: std::cout << x(3,4);
+        const real& operator() (size_t i, size_t j) const
+        {
+            // row major order
+            if (i < 0 || i >= m_m) {
+                throw std::out_of_range("Index i out of range in Block(i,j)");
+            }
+            if (j < 0 || j >= m_n) {
+                throw std::out_of_range("Index j out of range in Block(i,j)");
+            }
+            
+            return m_mat(i + m_imin, j + m_jmin);
+        }
+        
+        /// Read and write access to the i-th value of the field
+        /// Usage: std::cout << x(3,4); x(2, 3) = 5.;
+        real& operator() (size_t i, size_t j)
+        {
+            return const_cast<real&>(const_cast<const Block*>(this)->operator()(i, j));
+        }
+        
+        size_t m() const
+        {
+            return m_m;
+        }
+        
+        size_t n() const
+        {
+            return m_n; 
+        }
+        
+        /// Writes the matrix mat into the defined block
+        Block& operator= (const DMatrix& mat)
+        {
+            if (mat.m() != m() || mat.n() != n()) {
+                throw std::runtime_error("Cannot assign matrix to block: Dimensions do not match");
+            }
+            
+            for (size_t i = 0; i < m(); ++i) {
+                for (size_t j = 0; j < n(); ++j) {
+                    this->operator()(i, j) = mat(i,j);
+                }
+            }
+
+            return *this;
+        }
+        
+        /// Converts the block into a matrix
+        DMatrix matrix() const
+        {
+            DMatrix mat(m(), n());
+            
+            for (size_t i = 0; i < m(); ++i) {
+                for (size_t j = 0; j < n(); ++j) {
+                    mat(i,j) = this->operator()(i, j);
+                }
+            }
+            return mat;
+        }
+
+     private:
+         DMatrix& m_mat;
+         size_t m_imin, m_jmin, m_m, m_n;
+    };
+
+}
 
 #endif // FIELDS_HPP

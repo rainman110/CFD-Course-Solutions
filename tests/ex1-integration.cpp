@@ -15,7 +15,7 @@ TEST(Ex1, Integration_a)
     
     for (size_t i = 0; i < a.m(); ++i) {
         for (size_t j = 0; j < a.n(); ++j) {
-            a(i, j) = static_cast<double>((i+1)*(j+1));
+            a(i, j) = static_cast<real>((i+1)*(j+1));
         }
     }
     
@@ -33,7 +33,7 @@ TEST(Ex1, Integration_a)
     // Compute (5*x + A*x)*(1.5*x) using our blas routines
     blas::axpy(5.0, x, y);
     blas::scal(1.5, x);
-    double result = blas::dot(x,y);
+    real result = blas::dot(x,y);
     
     std::cout << "(5*x + A*x)*(1.5*x): " << result << std::endl;
     EXPECT_NEAR(4612.5, result, 1e-6);
@@ -45,13 +45,13 @@ TEST(Ex1, Integration_b)
     
     for (size_t i = 0; i < f.m(); ++i) {
         for (size_t j = 0; j < f.n(); ++j) {
-            f(i, j) = M_PI / 60. * static_cast<double>(i);
+            f(i, j) = M_PI / 60. * static_cast<real>(i);
         }
     }
 
     write_vtk_scalar("../data/gradientField.vtk", "gradient", f, 0.1, 0.1);
 
-    apply_function_to_field(f, [](double v) {
+    apply_function_to_field(f, [](real v) {
         return sin(v);
     });
 
@@ -60,8 +60,8 @@ TEST(Ex1, Integration_b)
 
 TEST(Ex1, Integration_c)
 {
-    DMatrix fieldU = read_field2d<double>("../data/fieldU.dat");
-    DMatrix fieldV = read_field2d<double>("../data/fieldV.dat");
+    DMatrix fieldU = read_field2d<real>("../data/fieldU.dat");
+    DMatrix fieldV = read_field2d<real>("../data/fieldV.dat");
 
     EXPECT_EQ(60, fieldU.m());
     EXPECT_EQ(60, fieldU.n());
