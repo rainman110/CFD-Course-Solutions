@@ -6,8 +6,9 @@
 #include <cfdlib/fields.hpp>
 #include <cfdlib/blas.hpp>
 #include <cfdlib/poisson.hpp>
+#include <cfdlib/solver.hpp>
 
-TEST(Poisson, createMatrix)
+TEST(Ex2, 1_createPoissonMatrix)
 {
     Poisson p(0.5, 1.5, 3, 2);
     DMatrix pm = p.createMatrix();
@@ -60,4 +61,56 @@ TEST(Poisson, createMatrix)
     EXPECT_NEAR(-64., pm(5,3), tol);
     EXPECT_NEAR( -4., pm(5,4), tol);
     EXPECT_NEAR(136., pm(5,5), tol);
+}
+
+TEST(Ex2, 2_solveExampleProblem)
+{
+    Poisson p(1., 1., 20, 20);
+    
+    DMatrix m = p.createMatrix();
+    DVector b(m.m(), 0.);
+    DVector x(m.m(), 1.);
+    
+    solve_sor(m, b, x, 1.5, 1e-10, 1000);
+    
+    real tol = 1e-8;
+    for (size_t i = 0; i < x.n(); ++i ) {
+        EXPECT_NEAR(0.0, x(i), tol);
+    }
+}
+
+TEST(Ex2, 3_solveExampleProblemWithRHS)
+{
+    
+    
+    Poisson p(1., 1., 20, 20);
+
+    DMatrix m = p.createMatrix();
+    DVector x(m.m(), 1.);
+    
+    // Lets define the right hand side function and sample it
+    DMatrix rhs = p.sampleFunction([](real x, real y) {
+        return 8 * M_PI * M_PI * sin(2. * M_PI * x)*sin(2. * M_PI * y);
+    });
+
+    // convert into vector
+    DVector b = matrix::flatten(rhs);
+
+    // solve the problem
+    solve_sor(m, b, x, 1.5, 1e-10, 1000);
+
+    // compute the analytical solution
+    DMatrix anal_solution = p.sampleFunction([](real x, real y) {
+        return sin(2. * M_PI * x)*sin(2. * M_PI * y);
+    });
+ 
+    // convert into vector
+    DVector x_anal = matrix::flatten(anal_solution);
+
+    // l2 norm
+    blas::axpy(-1., x, x_anal);
+    double norm_error = blas::nrm2(x_anal);
+
+    std::cout << "nrm2(num_sol - ana_sol): " << norm_error << std::endl;
+    EXPECT_LE(norm_error, 0.2);
 }

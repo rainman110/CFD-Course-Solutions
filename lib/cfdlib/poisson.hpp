@@ -13,6 +13,21 @@ public:
     /// boundary conditions p = 0.
     DMatrix createMatrix() const;
     
+    template <typename Function2P>
+    DMatrix sampleFunction(Function2P func) const
+    {
+        DMatrix result(m_imax, m_jmax);
+        for (size_t i = 1; i <= m_imax; ++i) {
+            real x = static_cast<real>(i)*dx();
+            for (size_t j = 1; j <= m_jmax; ++j) {
+                real y = static_cast<real>(j)*dy();
+                result(i - 1, j - 1) = func(x, y);
+            }
+        }
+        
+        return result;
+    }
+    
     real dx() const;
     real dy() const;
     

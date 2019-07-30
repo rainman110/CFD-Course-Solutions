@@ -108,6 +108,16 @@ public:
     {
         return const_cast<T&>(const_cast<const Field2D*>(this)->operator()(i, j));
     }
+    
+    void reshape(size_t m, size_t n)
+    {
+        if (m * n != m_m * m_n) {
+            throw std::runtime_error("Dimension error in Field2d::reshape");
+        }
+        
+        m_m = m;
+        m_n = n;
+    }
 
 private:
     // 1D storage of 2D field
@@ -264,7 +274,25 @@ namespace matrix
         
         return result;
     }
-    
+
+    template <typename T>
+    Field1D<T> flatten(const Field2D<T>& mat)
+    {
+        auto& mat_tmp = const_cast<Field2D<T>&>(mat);
+        
+        const size_t m_old = mat.m();
+        const size_t n_old = mat.n();
+        mat_tmp.reshape(1, m_old*n_old);
+        
+        Field1D<T> vec(m_old*n_old);
+        for (size_t i = 0; i < m_old*n_old; ++i) {
+            vec(i) = mat_tmp(0, i);
+        }
+        mat_tmp.reshape(m_old, n_old);
+        
+        return vec;
+    }
+
     /// Block-view of a matrix
     class Block {
     public:
