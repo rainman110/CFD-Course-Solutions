@@ -14,6 +14,7 @@ set(TESTSOURCES
   ex1-field1d.cpp
   ex1-field2d.cpp
   ex1-integration.cpp
+  ex2_integration.cpp
 )
 
 add_executable(runUnitTests ${TESTSOURCES})

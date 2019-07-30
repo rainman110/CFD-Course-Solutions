@@ -7,6 +7,8 @@
 #include <ostream>
 #include <fstream>
 
+#include <cfdlib/real.hpp>
+
 template <typename T>
 class Field1D
 {
@@ -236,7 +238,6 @@ Field2D<T> read_field2d(const std::string& filename)
     return result;
 }
 
-using real = double;
 using DMatrix = Field2D<real>;
 using DVector = Field1D<real>;
 
@@ -251,6 +252,16 @@ namespace matrix
             result(i,i) = 1.;
         }
 
+        return result;
+    }
+    
+    inline DMatrix diag(size_t n, real value)
+    {
+        DMatrix result(n, n, 0.);
+        for (size_t i = 0; i < n; ++i) {
+            result(i,i) = value;
+        }
+        
         return result;
     }
     

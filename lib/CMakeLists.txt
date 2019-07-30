@@ -8,6 +8,9 @@ add_library(cfd
   cfdlib/blas.hpp
   cfdlib/vtk-io.hpp
   cfdlib/vtk-io.cpp
+  cfdlib/poisson.cpp
+  cfdlib/poisson.hpp
+  cfdlib/real.hpp
 )
 
 target_include_directories(cfd PUBLIC ${PROJECT_SOURCE_DIR})
