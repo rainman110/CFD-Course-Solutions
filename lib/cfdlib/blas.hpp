@@ -53,20 +53,21 @@ void axpy(const T& alpha, const Field2D<T>& x, Field2D<T>& y)
  * 
  * x and y must have same size 
  */
-template <typename T>
-T dot(const Field1D<T>& x, const Field1D<T>& y)
+template <typename VectorLike1, typename VectorLike2>
+real dot(const VectorLike1& x, const VectorLike2& y)
 {
     if (x.n() != y.n()) {
         throw std::length_error("Fields x and y have different size in blas::dot.");
     }
 
-    T result = 0.;
+    real result = 0.;
     for (size_t i = 0; i < x.n(); ++i) {
         result += x(i) * y(i);
     }
 
     return result;
 }
+
 
 /**
  * Vector 2-norm of vector x

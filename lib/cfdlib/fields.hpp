@@ -125,6 +125,37 @@ private:
     size_t m_m, m_n;
 };
 
+template<typename T>
+class FieldRow
+{
+public:
+    FieldRow(const Field2D<T>& f, size_t rowIndex)
+        : m_f(f), m_idx(rowIndex)
+    {
+        if (m_idx < 0 || m_idx >= m_f.m()) {
+            throw std::out_of_range("Row index out of range in Row");
+        }
+    }
+
+    size_t n() const
+    {
+        return m_f.n();
+    }
+    
+    const T& operator() (size_t i) const
+    {
+        // row major order
+        if (i < 0 || i >= m_f.n()) {
+            throw std::out_of_range("Index i out of range in FieldRow(i)");
+        }
+        
+        return m_f(m_idx, i);
+    }
+private:
+    const Field2D<T>& m_f;
+    size_t m_idx;
+};
+
 template <typename T>
 bool is_equal(const Field2D<T>& f1, const Field2D<T>& f2, double eps)
 {

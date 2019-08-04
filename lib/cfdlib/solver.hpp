@@ -7,6 +7,7 @@
 
 #include <cfdlib/real.hpp>
 #include <cfdlib/fields.hpp>
+#include <cfdlib/blas.hpp>
 
 inline void notify_iteration_finished(unsigned iter, real error)
 {
@@ -25,24 +26,17 @@ inline void solve_sor(const DMatrix& A, const DVector& b, DVector& x, real omega
 
     unsigned int iter = 0;
     real error = 0.;
-    DVector xnext(x.n(), 0.);
     do {
         error = 0.;
         for (size_t k = 0; k < A.m(); ++k) {
-            real t1 = 0.;
-            for (size_t i = 0; i < k; ++i) {
-                t1 += A(k, i)*xnext(i);
-            }
-            real t2 = 0.;
-            for (size_t i = k+1; i < A.m(); ++i) {
-                t2 += A(k, i)*x(i);
-            }
+            real lhs_k = blas::dot(FieldRow<real>(A, k), x);
+            const real dx = omega/A(k, k) * (b(k) - lhs_k);
+            
+            x(k) += dx;
+            error += dx*dx;
 
-            xnext(k) = (1. - omega)*x(k) + omega/A(k, k) * (b(k) - t1 - t2);
-            error = std::max(error, fabs(xnext(k) - x(k)));
         }
-        x = xnext;
-
+        error = sqrt(error);
         notify_iteration_finished(iter, error);
 
         ++iter;
