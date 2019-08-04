@@ -81,36 +81,39 @@ TEST(Ex2, 2_solveExampleProblem)
 
 TEST(Ex2, 3_solveExampleProblemWithRHS)
 {
+    std::vector<size_t> grid_sizes({10, 20, 30, 40});
     
+    for (auto grid_size : grid_sizes) {
+
+        Poisson p(1., 1., grid_size, grid_size);
     
-    Poisson p(1., 1., 20, 20);
-
-    DMatrix m = p.createMatrix();
-    DVector x(m.m(), 1.);
+        DMatrix m = p.createMatrix();
+        DVector x(m.m(), 1.);
+        
+        // Lets define the right hand side function and sample it
+        DMatrix rhs = p.sampleFunction([](real x, real y) {
+            return 8 * M_PI * M_PI * sin(2. * M_PI * x)*sin(2. * M_PI * y);
+        });
     
-    // Lets define the right hand side function and sample it
-    DMatrix rhs = p.sampleFunction([](real x, real y) {
-        return 8 * M_PI * M_PI * sin(2. * M_PI * x)*sin(2. * M_PI * y);
-    });
-
-    // convert into vector
-    DVector b = matrix::flatten(rhs);
-
-    // solve the problem
-    solve_sor(m, b, x, 1.5, 1e-10, 1000);
-
-    // compute the analytical solution
-    DMatrix anal_solution = p.sampleFunction([](real x, real y) {
-        return sin(2. * M_PI * x)*sin(2. * M_PI * y);
-    });
- 
-    // convert into vector
-    DVector x_anal = matrix::flatten(anal_solution);
-
-    // l2 norm
-    blas::axpy(-1., x, x_anal);
-    double norm_error = blas::nrm2(x_anal);
-
-    std::cout << "nrm2(num_sol - ana_sol): " << norm_error << std::endl;
-    EXPECT_LE(norm_error, 0.2);
+        // convert into vector
+        DVector b = matrix::flatten(rhs);
+    
+        // solve the problem
+        solve_sor(m, b, x, 1.5, 1e-10, 1000);
+    
+        // compute the analytical solution
+        DMatrix anal_solution = p.sampleFunction([](real x, real y) {
+            return sin(2. * M_PI * x)*sin(2. * M_PI * y);
+        });
+     
+        // convert into vector
+        DVector x_anal = matrix::flatten(anal_solution);
+    
+        // l2 norm
+        blas::axpy(-1., x, x_anal);
+        double norm_error = blas::nrm2(x_anal);
+        
+        std::cout << "nrm2(num_sol - ana_sol) for grid size " << grid_size << ": " << norm_error << std::endl;
+        EXPECT_LE(norm_error, 0.2);
+    }
 }
