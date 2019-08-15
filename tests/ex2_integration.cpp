@@ -10,8 +10,8 @@
 
 TEST(Ex2, 1_createPoissonMatrix)
 {
-    Poisson p(0.5, 1.5, 3, 2);
-    DMatrix pm = p.createMatrix();
+    RegularGrid2d g(0.5, 1.5, 3, 2);
+    DMatrix pm = Poisson::createSystemMatrix(g);
     
     real tol = 1e-10;
     // 1. row
@@ -65,9 +65,9 @@ TEST(Ex2, 1_createPoissonMatrix)
 
 TEST(Ex2, 2_solveExampleProblem)
 {
-    Poisson p(1., 1., 20, 20);
+    RegularGrid2d g(1., 1., 20, 20);
     
-    DMatrix m = p.createMatrix();
+    DMatrix m = Poisson::createSystemMatrix(g);
     DVector b(m.m(), 0.);
     DVector x(m.m(), 1.);
     
@@ -85,13 +85,13 @@ TEST(Ex2, 3_solveExampleProblemWithRHS)
     
     for (auto grid_size : grid_sizes) {
 
-        Poisson p(1., 1., grid_size, grid_size);
-    
-        DMatrix m = p.createMatrix();
+        RegularGrid2d g(1., 1., grid_size, grid_size);
+        
+        DMatrix m = Poisson::createSystemMatrix(g);
         DVector x(m.m(), 1.);
         
         // Lets define the right hand side function and sample it
-        DMatrix rhs = p.sampleFunction([](real x, real y) {
+        DMatrix rhs = g.sampleFunction([](real x, real y) {
             return 8 * M_PI * M_PI * sin(2. * M_PI * x)*sin(2. * M_PI * y);
         });
     
@@ -102,7 +102,7 @@ TEST(Ex2, 3_solveExampleProblemWithRHS)
         solve_sor(m, b, x, 1.5, 1e-10, 1000);
     
         // compute the analytical solution
-        DMatrix anal_solution = p.sampleFunction([](real x, real y) {
+        DMatrix anal_solution = g.sampleFunction([](real x, real y) {
             return sin(2. * M_PI * x)*sin(2. * M_PI * y);
         });
      
@@ -116,4 +116,46 @@ TEST(Ex2, 3_solveExampleProblemWithRHS)
         std::cout << "nrm2(num_sol - ana_sol) for grid size " << grid_size << ": " << norm_error << std::endl;
         EXPECT_LE(norm_error, 0.2);
     }
+}
+
+TEST(Ex2, compareSolvers)
+{
+    // Here we use a grid of 30x30 as this will demonstrate
+    // the already large runtime difference of both solvers
+    RegularGrid2d g(1., 1., 30, 30);
+    DMatrix rhs = g.sampleFunction([](real x, real y) {
+        return 8 * M_PI * M_PI * sin(2. * M_PI * x)*sin(2. * M_PI * y);
+    });
+    // compute the analytical solution
+    DMatrix anal_solution = g.sampleFunction([](real x, real y) {
+        return sin(2. * M_PI * x)*sin(2. * M_PI * y);
+    });
+    
+    DMatrix m = Poisson::createSystemMatrix(g);
+    DVector x(m.m(), 1.);
+
+    // solve the problem
+    std::cout << "Solving using generic (slow) sor solver" << std::endl;
+    solve_sor(m, matrix::flatten(rhs), x, 1.5, 1e-10, 1000);
+    DVector diff_solution_2 = matrix::flatten(anal_solution);
+    blas::axpy(-1., x, diff_solution_2);
+    std::cout << "nrm2(num_sol - ana_sol) for generic solver: " << blas::nrm2(diff_solution_2) << std::endl;
+
+    DMatrix sol(anal_solution.m(), anal_solution.n(), 1.);
+
+    std::cout << "Solving using efficient (fast) sor solver" << std::endl;
+    Poisson::solve_sor(g, rhs, sol, HomogenousDirichletGridCorner(), 1.5, 1e-10, 1000);
+
+    // l2 norm
+    DMatrix diff_solution_1 = anal_solution;
+    blas::axpy(-1., sol, diff_solution_1);
+
+    std::cout << "nrm2(num_sol - ana_sol) for efficient solver: " << blas::nrm2(matrix::flatten(diff_solution_1)) << std::endl;
+
+    blas::axpy(-1., matrix::flatten(sol), x);
+    double norm_error =  blas::nrm2(x);
+    std::cout << "nrm2(num_sol1 - num_sol2): " << norm_error << std::endl;
+
+    // check this out... we have truely zero difference!
+    EXPECT_EQ(norm_error, 0.);
 }

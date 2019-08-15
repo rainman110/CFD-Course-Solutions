@@ -30,12 +30,14 @@ inline void solve_sor(const DMatrix& A, const DVector& b, DVector& x, real omega
         error = 0.;
         for (size_t k = 0; k < A.m(); ++k) {
             real lhs_k = blas::dot(FieldRow<real>(A, k), x);
-            const real dx = omega/A(k, k) * (b(k) - lhs_k);
-            
-            x(k) += dx;
-            error += dx*dx;
+            real res_k = b(k) - lhs_k ;
+
+            x(k) += omega/A(k, k) * res_k;
+            // Compute l2 norm
+            error += res_k*res_k;
 
         }
+        // note: this is the residuum of the previous iteration
         error = sqrt(error);
         notify_iteration_finished(iter, error);
 

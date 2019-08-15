@@ -22,4 +22,9 @@ TEST(Solver, sor_simple)
     EXPECT_NEAR(1., x(0), 1e-10);
     EXPECT_NEAR(1., x(1), 1e-10);
     EXPECT_NEAR(1., x(2), 1e-10);
+    
+    blas::gemv(1., A, x, -1. , b);
+    real residuum = blas::nrm2(b);
+    std::cout << "Residuum: " << residuum << std::endl;
+    EXPECT_LE(residuum, 1e-15);
 }
