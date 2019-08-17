@@ -128,11 +128,14 @@ TEST(Ex2, compareSolvers)
     });
     // compute the analytical solution
     DMatrix anal_solution = g.sampleFunction([](real x, real y) {
-        return sin(2. * M_PI * x)*sin(2. * M_PI * y);
+        return -sin(2. * M_PI * x)*sin(2. * M_PI * y);
     });
     
     DMatrix m = Poisson::createSystemMatrix(g);
-    DVector x(m.m(), 1.);
+    // we need to negate the matrix since the effienct poisson solver does not
+    // use the minus sign (as demanded in the excercise)
+    blas::scal(-1., m);
+    DVector x(m.m(), -1.);
 
     // solve the problem
     std::cout << "Solving using generic (slow) sor solver" << std::endl;
@@ -141,7 +144,7 @@ TEST(Ex2, compareSolvers)
     blas::axpy(-1., x, diff_solution_2);
     std::cout << "nrm2(num_sol - ana_sol) for generic solver: " << blas::nrm2(diff_solution_2) << std::endl;
 
-    DMatrix sol(anal_solution.m(), anal_solution.n(), 1.);
+    DMatrix sol(anal_solution.m(), anal_solution.n(), -1.);
 
     std::cout << "Solving using efficient (fast) sor solver" << std::endl;
     Poisson::solve_sor(g, rhs, sol, HomogenousDirichletGridCorner(), 1.5, 1e-10, 1000);

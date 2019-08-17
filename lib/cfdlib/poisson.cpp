@@ -61,9 +61,9 @@ void Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& 
     real error = 0.;
     
     // coefficients of the poisson problem
-    const real c1 = -1./square(grid.dx());
-    const real c2 = -1./square(grid.dy());
-    const real c3 =  2./square(grid.dx()) + 2./square(grid.dy());
+    const real c1 = 1./square(grid.dx());
+    const real c2 = 1./square(grid.dy());
+    const real c3 = -2./square(grid.dx()) - 2./square(grid.dy());
     
     do
     {
