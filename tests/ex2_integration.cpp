@@ -139,21 +139,27 @@ TEST(Ex2, compareSolvers)
 
     // solve the problem
     std::cout << "Solving using generic (slow) sor solver" << std::endl;
-    solve_sor(m, matrix::flatten(rhs), x, 1.5, 1e-10, 1000);
-    DVector diff_solution_2 = matrix::flatten(anal_solution);
-    blas::axpy(-1., x, diff_solution_2);
-    std::cout << "nrm2(num_sol - ana_sol) for generic solver: " << blas::nrm2(diff_solution_2) << std::endl;
+    real res1 = solve_sor(m, matrix::flatten(rhs), x, 1.5, 1e-10, 1000);
+    
+    // Compute difference to analytic solution
+    DVector diff_solution_1 = matrix::flatten(anal_solution);
+    blas::axpy(-1., x, diff_solution_1);
 
     DMatrix sol(anal_solution.m(), anal_solution.n(), -1.);
 
     std::cout << "Solving using efficient (fast) sor solver" << std::endl;
-    Poisson::solve_sor(g, rhs, sol, HomogenousDirichletGridCorner(), 1.5, 1e-10, 1000);
+    real res2 = Poisson::solve_sor(g, rhs, sol, HomogenousDirichletGridCorner(), 1.5, 1e-10, 1000);
 
-    // l2 norm
-    DMatrix diff_solution_1 = anal_solution;
-    blas::axpy(-1., sol, diff_solution_1);
-
-    std::cout << "nrm2(num_sol - ana_sol) for efficient solver: " << blas::nrm2(matrix::flatten(diff_solution_1)) << std::endl;
+    // l2 norm of the error
+    DMatrix diff_solution_2 = anal_solution;
+    blas::axpy(-1., sol, diff_solution_2);
+ 
+    std::cout << "nrm2(num_sol - ana_sol) for generic solver: " << blas::nrm2(diff_solution_1) << std::endl;
+    std::cout << "nmr2(residuum) for generic solver: " << res1 << std::endl;
+    std::cout << std::endl;
+    std::cout << "nrm2(num_sol - ana_sol) for efficient solver: " << blas::nrm2(matrix::flatten(diff_solution_2)) << std::endl;
+    std::cout << "nmr2(residuum) for efficient solver: " << res2 << std::endl;
+    std::cout << std::endl;
 
     blas::axpy(-1., matrix::flatten(sol), x);
     double norm_error =  blas::nrm2(x);
@@ -161,4 +167,5 @@ TEST(Ex2, compareSolvers)
 
     // check this out... we have truely zero difference!
     EXPECT_EQ(norm_error, 0.);
+    EXPECT_EQ(res1, res2);
 }

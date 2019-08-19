@@ -12,6 +12,8 @@ add_library(cfd
   cfdlib/poisson.hpp
   cfdlib/real.hpp
   cfdlib/solver.hpp
+  cfdlib/timer.cpp
+  cfdlib/timer.hpp
 )
 
 target_include_directories(cfd PUBLIC ${PROJECT_SOURCE_DIR})

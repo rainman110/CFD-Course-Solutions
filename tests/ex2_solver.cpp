@@ -18,13 +18,10 @@ TEST(Solver, sor_simple)
     b(2) = 2.;
     DVector x(3, 0.);
     
-    solve_sor(A, b, x, 1.5, 1e-15, 1000);
+    real error = solve_sor(A, b, x, 1.5, 1e-14, 1000);
     EXPECT_NEAR(1., x(0), 1e-10);
     EXPECT_NEAR(1., x(1), 1e-10);
     EXPECT_NEAR(1., x(2), 1e-10);
     
-    blas::gemv(1., A, x, -1. , b);
-    real residuum = blas::nrm2(b);
-    std::cout << "Residuum: " << residuum << std::endl;
-    EXPECT_LE(residuum, 1e-15);
+    EXPECT_LE(error, 1e-14);
 }

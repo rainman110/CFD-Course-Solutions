@@ -45,7 +45,7 @@ DMatrix Poisson::createSystemMatrix(const RegularGrid2d& grid)
     return result;
 }
 
-void Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& sol, const BoundaryCondition& bc, real omega, real epsilon, unsigned int itermax)
+real Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& sol, const BoundaryCondition& bc, real omega, real epsilon, unsigned int itermax)
 {
     if (!grid.matches(rhs)) {
         throw std::runtime_error("RHS matrix does not match grid"); 
@@ -65,6 +65,20 @@ void Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& 
     const real c2 = 1./square(grid.dy());
     const real c3 = -2./square(grid.dx()) - 2./square(grid.dy());
     
+    auto local_residuum = [&](const size_t& i, const size_t& j)
+    {
+        // make sure to use the same numerics as the generic sor solver (i.e. same addition order)
+        const real lhs_ij = c1 * p(i-1, j)
+                          + c2 * p(i, j-1) + c3 * p(i,j)  + c2 * p(i, j+1)
+                          + c1 * p(i+1, j);
+        
+        // Residuum for the current grid cell
+        return rhs(i - 1,j - 1) - lhs_ij;
+    };
+    
+    Timer t;
+    t.start();
+
     do
     {
         error = 0.;
@@ -72,13 +86,8 @@ void Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& 
 
         for (size_t i = 1; i < p.m() - 1; ++i) {
             for (size_t j = 1; j < p.n() - 1; ++j) {
-                // make sure to use the same numerics as the generic sor solver (i.e. same addition order)
-                const real lhs_ij = c1 * p(i-1, j)
-                                  + c2 * p(i, j-1) + c3 * p(i,j)  + c2 * p(i, j+1)
-                                  + c1 * p(i+1, j);
-
                 // Residuum for the current grid cell
-                const real res_ij = rhs(i - 1,j - 1) - lhs_ij;
+                const real res_ij = local_residuum(i, j);
 
                 p(i, j) += omega/c3 * res_ij;
                 // compute l2 norm
@@ -89,9 +98,24 @@ void Poisson::solve_sor(const RegularGrid2d &grid, const DMatrix &rhs, DMatrix& 
         notify_iteration_finished(iter, error);
         iter++;
     } while(iter < itermax && error > epsilon);
+    
+    // Compute final residuum
+    error = 0.;
+    bc.apply(p);
+    for (size_t i = 1; i < p.m() - 1; ++i) {
+        for (size_t j = 1; j < p.n() - 1; ++j) {
+            // Residuum for the current grid cell
+            error += square(local_residuum(i, j));
+        }
+    }
+    error = sqrt(error);
+
+    t.stop();
+    notify_finished(iter, error, t.milliseconds());
 
     // Remove ghost cells from solution
     sol = ghostCellsRemoved(p);
+    return error;
 }
 
 real RegularGrid2d::dx() const

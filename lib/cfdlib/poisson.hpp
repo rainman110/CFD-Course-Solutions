@@ -114,8 +114,10 @@ public:
      * @param omega      SOR relaxation parameter
      * @param epsilon    L2-Error tolerance of the residuum
      * @param itermax    Maximum allowed iterations
+     * 
+     * @returns L2-Norm of the residuum of the solution
      */
-    static void solve_sor(const RegularGrid2d& grid, const DMatrix& rhs, DMatrix &p,
+    static real solve_sor(const RegularGrid2d& grid, const DMatrix& rhs, DMatrix &p,
                           const BoundaryCondition& bc,
                           real omega, real epsilon, unsigned int itermax);
     
