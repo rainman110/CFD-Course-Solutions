@@ -1,0 +1,14 @@
+os: linux
+
+language: cpp
+
+before_script:
+  - mkdir build
+  - cd build
+
+script:
+
+  - cmake -DCMAKE_BUILD_TYPE=Release ..
+  - make -j 4
+  - cd tests
+  - ./runUnitTests
