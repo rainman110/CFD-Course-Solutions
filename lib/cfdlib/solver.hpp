@@ -12,7 +12,7 @@
 
 inline void notify_iteration_finished(unsigned iter, real error)
 {
-    std::cout << "Iter " << iter << ": " << error << std::endl;
+    //std::cout << "Iter " << iter << ": " << error << std::endl;
 }
 
 inline void notify_finished(unsigned iter, real error, real milliseconds)
