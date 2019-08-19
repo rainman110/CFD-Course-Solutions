@@ -1,6 +1,8 @@
 #ifndef BLAS_H
 #define BLAS_H
 
+#include <cmath>
+
 #include <cfdlib/fields.hpp>
 
 #include <exception>

@@ -38,7 +38,7 @@ public:
     const T& operator() (size_t i) const
     {
         // row major order
-        if (i < 0 || i >= m_n) {
+        if (i >= m_n) {
             throw std::out_of_range("Index i out of range in Field1D(i)");
         }
         
@@ -92,10 +92,10 @@ public:
     const T& operator() (size_t i, size_t j) const
     {
         // row major order
-        if (i < 0 || i >= m_m) {
+        if (i >= m_m) {
             throw std::out_of_range("Index i out of range in Field2D(i,j)");
         }
-        if (j < 0 || j >= m_n) {
+        if (j >= m_n) {
             throw std::out_of_range("Index j out of range in Field2D(i,j)");
         }
 
@@ -132,7 +132,7 @@ public:
     FieldRow(const Field2D<T>& f, size_t rowIndex)
         : m_f(f), m_idx(rowIndex)
     {
-        if (m_idx < 0 || m_idx >= m_f.m()) {
+        if (m_idx >= m_f.m()) {
             throw std::out_of_range("Row index out of range in Row");
         }
     }
@@ -145,7 +145,7 @@ public:
     const T& operator() (size_t i) const
     {
         // row major order
-        if (i < 0 || i >= m_f.n()) {
+        if (i >= m_f.n()) {
             throw std::out_of_range("Index i out of range in FieldRow(i)");
         }
         
@@ -330,10 +330,10 @@ namespace matrix
         Block(DMatrix& mat, size_t imin, size_t jmin, size_t m, size_t n)
             : m_mat(mat), m_imin(imin), m_jmin(jmin), m_m(m), m_n(n)
         {
-            if (imin < 0 || imin >= mat.m() || m < 0 || imin + m > mat.m() ) {
+            if (imin >= mat.m() || imin + m > mat.m() ) {
                 throw std::runtime_error("Illegal row indices of BlockMatrix");
             }
-            if (jmin < 0 || jmin >= mat.n() || n < 0 || jmin + n > mat.n() ) {
+            if (jmin >= mat.n() || jmin + n > mat.n() ) {
                 throw std::runtime_error("Illegal row indices of BlockMatrix");
             }
         }
@@ -343,10 +343,10 @@ namespace matrix
         const real& operator() (size_t i, size_t j) const
         {
             // row major order
-            if (i < 0 || i >= m_m) {
+            if (i >= m_m) {
                 throw std::out_of_range("Index i out of range in Block(i,j)");
             }
-            if (j < 0 || j >= m_n) {
+            if (j >= m_n) {
                 throw std::out_of_range("Index j out of range in Block(i,j)");
             }
             
